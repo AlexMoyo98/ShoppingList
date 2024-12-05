@@ -1,17 +1,22 @@
 package com.example.shoppinglist
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -22,7 +27,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -65,13 +69,42 @@ fun ShoppingListItem(innerPadding: PaddingValues = PaddingValues()) {
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            items(sItems) {
-                ShoppingListItem(it, {}, {})
+            items(sItems) { item ->
+                if (item.isEditing) {
+                    ShoppingItemEditor(item = item,
+                        onEdiComplete = { editedName, editedQuantity ->
+                            sItems = sItems.map {
+                                if (it.id == item.id) {
+                                    it.copy(name = editedName, quantity = editedQuantity, isEditing = false)
+                                } else {
+                                    it
+                                }
+                            }
+                        })
+                } else {
+                    ShoppingListItem(item = item,
+                        onEdiClick = {
+                            sItems = sItems.map {
+                                if (it.id == item.id) {
+                                    it.copy(isEditing = true)
+                                } else {
+                                    it
+                                }
+                            }
+                        },
+                        onDeleteClick = {
+                            sItems = sItems.filterNot { it.id == item.id }
+                        })
+                }
             }
         }
     }
     if (showDialog) {
-        AlertDialog(onDismissRequest = { showDialog = false },
+        AlertDialog(onDismissRequest = {
+            showDialog = false
+            itemName = ""
+            itemQuantity = ""
+        },
             confirmButton = {
                 Row(
                     modifier = Modifier
@@ -94,7 +127,11 @@ fun ShoppingListItem(innerPadding: PaddingValues = PaddingValues()) {
                     }) {
                         Text("Add")
                     }
-                    Button(onClick = { showDialog = false }) {
+                    Button(onClick = {
+                        showDialog = false
+                        itemName = ""
+                        itemQuantity = ""
+                    }) {
                         Text("Cancel")
                     }
                 }
@@ -128,8 +165,42 @@ fun ShoppingListItem(innerPadding: PaddingValues = PaddingValues()) {
 }
 
 @Composable
-fun ShoppingItemEditor(item: ShoppingItem, onEdiComplete: (String, Int) -> Unit){
+fun ShoppingItemEditor(item: ShoppingItem, onEdiComplete: (String, Int) -> Unit) {
     var editedName by remember { mutableStateOf(item.name) }
+    var editedQuantity by remember { mutableStateOf(item.quantity.toString()) }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color.White)
+            .padding(8.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
+        Column {
+            BasicTextField(
+                value = editedName,
+                onValueChange = { editedName = it },
+                singleLine = true,
+                modifier = Modifier
+                    .wrapContentSize()
+                    .padding(8.dp)
+            )
+            BasicTextField(
+                value = editedQuantity,
+                onValueChange = { editedQuantity = it },
+                singleLine = true,
+                modifier = Modifier
+                    .wrapContentSize()
+                    .padding(8.dp)
+            )
+        }
+        Button(
+            onClick = {
+                onEdiComplete(editedName, editedQuantity.toIntOrNull() ?: 1)
+            }) {
+            Text("Save")
+        }
+    }
 }
 
 @Composable
@@ -145,17 +216,22 @@ fun ShoppingListItem(
             .border(
                 border = BorderStroke(2.dp, Color(0XFF018786)),
                 shape = RoundedCornerShape(20)
-            )
+            ),
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(text = "${item.name} (x${item.quantity})", modifier = Modifier.padding(8.dp))
+        Row(modifier = Modifier.padding(start = 8.dp)) { // Use Row for horizontal arrangement
+            Text(text = "${item.name}")
+            Spacer(modifier = Modifier.width(100.dp)) // Add space between name and quantity
+            Text(text = "x${item.quantity}")
+        }
         Row(modifier = Modifier.padding(8.dp)) {
             IconButton(onClick = onEdiClick) {
                 Icon(imageVector = Icons.Default.Edit, contentDescription = null)
             }
-            IconButton(onClick = onEdiClick) {
+            IconButton(onClick = onDeleteClick) {
                 Icon(imageVector = Icons.Default.Delete, contentDescription = null)
-            }
 
+            }
         }
     }
 }

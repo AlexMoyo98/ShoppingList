@@ -207,7 +207,7 @@ fun ShoppingItemEditor(item: ShoppingItem, onEdiComplete: (String, Int) -> Unit)
 fun ShoppingListItem(
     item: ShoppingItem,
     onEdiClick: () -> Unit,
-    onDeleteClick: () -> Unit,
+    onDeleteClick: () -> Unit
 ) {
     Row(
         modifier = Modifier

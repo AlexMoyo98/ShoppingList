@@ -75,7 +75,11 @@ fun ShoppingListItem(innerPadding: PaddingValues = PaddingValues()) {
                         onEdiComplete = { editedName, editedQuantity ->
                             sItems = sItems.map {
                                 if (it.id == item.id) {
-                                    it.copy(name = editedName, quantity = editedQuantity, isEditing = false)
+                                    it.copy(
+                                        name = editedName,
+                                        quantity = editedQuantity,
+                                        isEditing = false
+                                    )
                                 } else {
                                     it
                                 }
